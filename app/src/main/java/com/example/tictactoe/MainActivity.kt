@@ -6,6 +6,7 @@ import android.util.Xml
 import android.view.View
 import android.widget.Button
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -21,6 +22,9 @@ class MainActivity : AppCompatActivity() {
 
     private var firstTurn = Turn.X
     private var currentTurn = Turn.X
+
+    private var xScore = 0
+    private var oScore = 0
 
     private var boardList = mutableListOf<Button>()
 
@@ -51,10 +55,85 @@ class MainActivity : AppCompatActivity() {
         boardList.add(binding.c3)
     }
 
+    private fun fullBoard(): Boolean {
+        for(button in boardList){
+            if(button.text == "")
+                return false
+        }
+        return true
+    }
+
     fun boardTapped(view: View) {
         if(view !is Button)
             return
         addToBoard(view)
+
+        if(victory(O)){
+            oScore++
+            result("O is the winner!")
+        }
+        else if(victory(X)){
+            xScore++
+            result("X is the winner!")
+        } else if(fullBoard()){
+            result("This is a tie!")
+        }
+    }
+
+    private fun victory(s: String): Boolean {
+
+        // Check if a row is the same, if so, there is a winner
+        if(match(binding.a1,s) && match(binding.a2,s) && match(binding.a3,s))
+            return true
+        if(match(binding.b1,s) && match(binding.b2,s) && match(binding.b3,s))
+            return true
+        if(match(binding.c1,s) && match(binding.c2,s) && match(binding.c3,s))
+            return true
+
+        // Check if a column is the same, if so, there is a winner
+        if(match(binding.a1,s) && match(binding.b1,s) && match(binding.c1,s))
+            return true
+        if(match(binding.a2,s) && match(binding.b2,s) && match(binding.c2,s))
+            return true
+        if(match(binding.a3,s) && match(binding.b3,s) && match(binding.c3,s))
+            return true
+
+        // Check if an X is the same, if so, there is a winner
+        if(match(binding.a1,s) && match(binding.b2,s) && match(binding.c3,s))
+            return true
+        if(match(binding.a3,s) && match(binding.b2,s) && match(binding.c1,s))
+            return true
+        return false
+    }
+
+    private fun match(button: Button, symbol: String): Boolean = button.text == symbol
+
+    private fun result(title: String) {
+        val message = "\nO score: $oScore\n \nX score: $xScore"
+        AlertDialog.Builder(this).setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Play Again")
+            { _,_ ->
+                resetBoard()
+            }
+            .setCancelable(false)
+            .show()
+
+
+    }
+
+    private fun resetBoard() {
+        for(button in boardList){
+            button.text = ""
+        }
+
+        if(firstTurn == Turn.O)
+            firstTurn = Turn.X
+        else if(firstTurn == Turn.X)
+            firstTurn = Turn.O
+
+        currentTurn = firstTurn
+        setTurnLabel()
     }
 
     private fun addToBoard(button: Button) {
@@ -74,9 +153,9 @@ class MainActivity : AppCompatActivity() {
     private fun setTurnLabel() {
         var turnText = ""
         if(currentTurn == Turn.X)
-            turnText = "Turn $X"
+            turnText = "This is $X's Turn"
         else if(currentTurn == Turn.O)
-            turnText = "Turn $O"
+            turnText = "This is $O's Turn"
         binding.turnTV.text = turnText
     }
 
